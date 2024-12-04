@@ -26,6 +26,12 @@ public class Program
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+        
+            new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(environment == "Development" ? $"appsettings.{environment}.json" : "appsettings.json")
+                .AddEnvironmentVariables();
+            
             builder.AddBasicHealthChecks();
             builder.Services.AddSwaggerGen();
 
@@ -68,6 +74,10 @@ public class Program
 
             app.UseBasicHealthChecks();
 
+            var scope = app.Services.CreateScope();
+
+            scope.ServiceProvider.GetService<DefaultContext>()!.Database.Migrate();
+            
             app.MapControllers();
 
             app.Run();
